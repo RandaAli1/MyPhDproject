@@ -1,0 +1,19 @@
+# Consecutively change N to the name of a chromosome until you have downloaded the files for each chromosome (1-22,X):
+
+$ wget ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20130502/ALL.chrN.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz
+$ wget ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20130502/ALL.chrN.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz.tbi 
+$ gunzip ALL.chrN*.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz 
+$ gunzip ALL.chrN.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz.tbi
+$ wget ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20130502/integrated_call_samples_v3.20130502.ALL.panel 
+$ awk ‘{ if ($3==”EUR’’) print $1}’ integrated_call_samples_v3.20130502.ALL > EuropeanSampleIDsFile.txt
+$ vcftools --vcf ALL.chrN.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf --keep EuropeanSampleIDsFile.txt --out ALL.chrN.phase3_shapeit2_european.20130502.genotypes --plink-tped
+$ plink --tfile ALL.chrN.phase3_shapeit2_european.20130502.genotypes --recode --out chrN.phase3_shapeit2_european.20130502.genotypes –noweb
+$ plink --file chrN.phase3_shapeit2_european.20130502.genotypes --maf 0.01 --recode --out chrN.phase3_shapeit2_european.20130502.freq –noweb
+$ plink --file chrN.phase3_shapeit2_european.20130502.freq --make-bed --out European_chr_N –noweb
+$ awk '!seen[$2]++' European_chr_N.bim > keepSNPs_chrN.txt
+$ plink --bfile European_chr_N --extract keepSNPs_chrN.txt --recode --noweb --make-bed --out European_chr_N_uniqueSNPs
+
+# Repeat the steps above for each autosome then create a .txt file with all chromosome names (European_chr_N_uniqueSNPs).
+# Merge all binary files in PLINK:
+
+$ plink --bfile European_chr_1_uniqueSNPs --merge-list chr_names.txt --make-bed --out allchromosome_european_1kPGph3 –noweb
